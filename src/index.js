@@ -1,11 +1,11 @@
 import { config } from "./config.js";
-import { createImapClient, fetchPendingInvoiceEmails, moveMessage } from "./imapClient.js";
-import {
-  createDraftPurchaseInvoice,
-  attachFileToDocument,
-  findOrCreateSupplierContact,
-} from "./holdedClient.js";
+import { createImapClient, fetchPendingInvoiceEmails } from "./imapClient.js";
 
+// Este script SOLO lista los correos con factura pendientes de subir.
+// La creacion en Holded requiere leer el importe real de cada PDF (ver README),
+// asi que no se automatiza aqui de forma ciega: usa este listado como punto de
+// partida y procesa cada uno con holdedClient.createDraftPurchaseInvoice pasando
+// los importes reales.
 async function run() {
   const client = createImapClient();
   await client.connect();
@@ -13,26 +13,9 @@ async function run() {
 
   try {
     const emails = await fetchPendingInvoiceEmails(client);
-    console.log(`Encontrados ${emails.length} correo(s) con PDF pendientes de subir.`);
-
+    console.log(`\n${emails.length} correo(s) con PDF pendientes de revisar:\n`);
     for (const email of emails) {
-      console.log(`\nProcesando: "${email.subject}" de ${email.fromEmail}`);
-      try {
-        const contact = await findOrCreateSupplierContact(email.fromEmail);
-        const invoice = await createDraftPurchaseInvoice({ ...email, contactId: contact.id });
-        const invoiceId = invoice.id;
-
-        for (const attachment of email.attachments) {
-          await attachFileToDocument(invoiceId, attachment.filename, attachment.content);
-          console.log(`  Adjunto subido: ${attachment.filename}`);
-        }
-
-        await moveMessage(client, email.uid, config.imap.processedFolder);
-        console.log(`  OK -> factura ${invoiceId} creada en Holded.`);
-      } catch (err) {
-        console.error(`  ERROR procesando este correo: ${err.message}`);
-        await moveMessage(client, email.uid, config.imap.errorFolder);
-      }
+      console.log(`- uid ${email.uid} | ${email.fromEmail} | "${email.subject}" | ${email.attachments.length} PDF(s)`);
     }
   } finally {
     await client.logout();

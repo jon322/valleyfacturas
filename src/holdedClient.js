@@ -51,24 +51,44 @@ export async function findOrCreateSupplierContact(email, name) {
 }
 
 // Crea una factura de proveedor (compra) como borrador para revisar en Holded.
-export async function createDraftPurchaseInvoice({ subject, fromEmail, contactId, date }) {
+// IMPORTANTE: "lineItems" debe llevar los importes REALES leidos de la factura
+// (subtotal/base imponible por linea), no un placeholder a 0. Holded no hace
+// OCR fiable via API: quien llama a esta funcion (persona o agente) tiene que
+// haber leido el documento antes de invocarla.
+// lineItems: [{ name, units, price, taxRate? }]  price = importe neto (sin IVA) de la linea
+export async function createDraftPurchaseInvoice({ contactId, date, notes, documentNumber, lineItems }) {
+  if (!lineItems?.length) {
+    throw new Error("createDraftPurchaseInvoice requiere lineItems con importes reales (no 0).");
+  }
+  const items = lineItems.map((it) => ({
+    name: it.name,
+    units: it.units ?? 1,
+    price: it.price,
+    tax: 0,
+    taxes: [it.taxRate || config.holded.defaultTax],
+    account: config.holded.defaultAccountId,
+  }));
+
   const { data } = await holded.post("/purchases", {
     contact_id: contactId,
     date: (date || new Date()).toISOString().slice(0, 10),
-    notes: `Importado automaticamente desde correo de ${fromEmail}. Asunto: ${subject}`,
-    items: [
-      {
-        name: subject || "Factura recibida por email",
-        desc: `Remitente: ${fromEmail}`,
-        units: 1,
-        price: 0,
-        tax: 0,
-        taxes: [config.holded.defaultTax],
-        account: config.holded.defaultAccountId,
-      },
-    ],
+    notes,
+    items,
   });
-  return waitUntilReadable(`/purchases/${data.id}`);
+  const purchase = await waitUntilReadable(`/purchases/${data.id}`);
+
+  if (documentNumber) {
+    // document_number solo se puede fijar de forma fiable una vez el documento
+    // esta aprobado (no en borrador); si sigue en borrador este intento puede
+    // no persistir y habra que repetirlo mas tarde con scripts/set-document-number.js.
+    try {
+      await holded.put(`/purchases/${data.id}`, { document_number: documentNumber });
+    } catch {
+      // no crítico: se puede fijar mas tarde
+    }
+  }
+
+  return purchase;
 }
 
 export async function attachFileToDocument(documentId, filename, buffer) {
@@ -79,5 +99,10 @@ export async function attachFileToDocument(documentId, filename, buffer) {
     form,
     { headers: form.getHeaders() }
   );
+  return data;
+}
+
+export async function setDocumentNumber(purchaseId, documentNumber) {
+  const { data } = await holded.put(`/purchases/${purchaseId}`, { document_number: documentNumber });
   return data;
 }

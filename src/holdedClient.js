@@ -35,11 +35,12 @@ export async function findContactByEmail(email) {
   return data.items?.[0] || null;
 }
 
-export async function createSupplierContact(email, name) {
+export async function createSupplierContact(email, name, extra = {}) {
   const { data } = await holded.post("/contacts", {
     name: name || email,
-    email,
+    ...(email ? { email } : {}),
     type: "supplier",
+    ...extra,
   });
   return waitUntilReadable(`/contacts/${data.id}`);
 }
@@ -79,7 +80,7 @@ export async function createDraftPurchaseInvoice({ contactId, date, notes, docum
 
   const { data } = await holded.post("/purchases", {
     contact_id: contactId,
-    date: (date || new Date()).toISOString().slice(0, 10),
+    date: typeof date === "string" ? date : (date || new Date()).toISOString().slice(0, 10),
     notes,
     items,
   });

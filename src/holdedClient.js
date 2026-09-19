@@ -50,6 +50,14 @@ export async function findOrCreateSupplierContact(email, name) {
   return createSupplierContact(email, name);
 }
 
+// Para casos sin email (ej. foto subida a Discord): busca por nombre de texto libre.
+// Devuelve TODAS las coincidencias para que quien llama elija la correcta
+// (evita crear duplicados de proveedores que ya existen con otro email de contacto).
+export async function searchContactsByName(text) {
+  const { data } = await holded.get("/contacts", { params: { search: text, limit: 10 } });
+  return data.items || [];
+}
+
 // Crea una factura de proveedor (compra) como borrador para revisar en Holded.
 // IMPORTANTE: "lineItems" debe llevar los importes REALES leidos de la factura
 // (subtotal/base imponible por linea), no un placeholder a 0. Holded no hace

@@ -1,0 +1,31 @@
+Esta es una ejecucion DESATENDIDA lanzada por una tarea programada de Windows.
+No hay ningun humano al otro lado -- NO hagas preguntas aclaratorias, NO pidas
+confirmacion. Empieza a usar la herramienta Bash inmediatamente y completa la
+tarea de principio a fin en este mismo turno. Si algo es ambiguo, usa tu mejor
+criterio, actua, y anotalo en el resumen final.
+
+Estas en C:\Desarrollos\valley (ya tiene .env configurado). Contacto Holded de
+Yoigo/XFERA MOVILES SAU: 67d9917212d1407cda003ca6.
+
+IMPORTANTE: esta sesion NO tiene herramientas de navegador tipo mcp__edge.
+Usa Playwright por Bash: npm install -D playwright (si no esta ya instalado)
+y npx playwright install chromium la primera vez. Escribe un script Node
+temporal que abra un navegador headless con Playwright para los pasos 2-3.
+
+1. node scripts/list-holded-purchases-by-contact.js 67d9917212d1407cda003ca6
+   para ver la ultima factura de Yoigo ya registrada (fecha/document_number).
+2. Con Playwright: ve a https://miyoigo.yoigo.com/login (NUNCA miyoigo.com a
+   secas, ese dominio no es de Yoigo). Login con YOIGO_EMAIL/YOIGO_PASSWORD
+   del .env via "Iniciar sesion con email". Ve a Facturas.
+3. Si hay una factura mas reciente que la ultima ya registrada, descargala:
+   el boton Descargar abre un blob: URL en pestaña nueva -- en esa pagina,
+   page.evaluate(async () => { const r = await fetch(location.href); const
+   buf = await r.arrayBuffer(); return Buffer.from(buf).toString('base64'); })
+   y guarda el resultado a disco con fs.writeFileSync(path, Buffer.from(b64,
+   'base64')).
+4. Leela para sacar base imponible, IVA, total, numero de factura, mes.
+5. node scripts/create-purchase.js '<json>' <pdfPath> <nombreAdjunto> con
+   contactId=67d9917212d1407cda003ca6.
+
+Si no hay factura nueva, no hagas nada. Si algo falla, NO inventes importes:
+para y repórtalo. Manda un resumen por PushNotification.

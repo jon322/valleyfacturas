@@ -1,0 +1,27 @@
+Esta es una ejecucion DESATENDIDA lanzada por una tarea programada de Windows.
+No hay ningun humano al otro lado -- NO hagas preguntas aclaratorias, NO pidas
+confirmacion, NO te limites a describir un plan. Empieza a usar la herramienta
+Bash inmediatamente y completa la tarea de principio a fin en este mismo turno.
+Si algo es ambiguo, usa tu mejor criterio, actua, y anotalo en el resumen final.
+
+Estas en C:\Desarrollos\valley (ya tiene .env configurado, no hace falta crearlo).
+Lee README.md y sigue exactamente el flujo de dos pasos (prepare + create) para
+CORREO y para DISCORD. Regla innegociable: nunca subas una factura con importe 0
+ni inventado -- si no puedes leer el importe real de un PDF/imagen con confianza,
+dejalo sin marcar como procesado y anotalo en el resumen final para revision humana.
+
+CORREO: node src/index.js lista correos pendientes (con PDF, no leidos). Usa
+criterio: nominas/RRHH, modelos fiscales, avisos de asamblea, condiciones de
+pedido NO son facturas de compra -- ignoralos (no hace falta marcarlos, solo no
+proceses). Facturas reales de proveedor SI: node scripts/prepare-invoice.js <uid>,
+lee el PDF en tmp-pdfs/, extrae importe neto/IVA/numero/fecha, node
+scripts/create-purchase.js '<json>' <pdfPath> <nombreAdjunto>, luego
+node scripts/mark-email-processed.js <uid> (o "<uid> error" si fallo).
+
+DISCORD: node scripts/discord-prepare.js lista imagenes/PDFs sin procesar (sin
+reaccion checkmark). Para cada uno, leelo, busca contacto existente antes de
+crear uno nuevo (searchContactsByName en src/holdedClient.js si no hay email),
+mismo patron create-purchase.js + node scripts/discord-mark-processed.js <id>.
+
+Borra tmp-pdfs/ al terminar. Manda un resumen breve por PushNotification: cuantas
+facturas subiste (proveedor + importe), cuantas dejaste sin procesar y por que.

@@ -10,7 +10,7 @@ import { config } from "../src/config.js";
 import { findOrCreateSupplierContact } from "../src/holdedClient.js";
 
 const uids = process.argv.slice(2).map(Number);
-fs.mkdirSync("tmp-pdfs", { recursive: true });
+fs.mkdirSync(config.outputDir, { recursive: true });
 
 const client = createImapClient();
 await client.connect();
@@ -33,7 +33,7 @@ for (const parsed of messages) {
     console.log(`(sin PDF) ${parsed.subject}`);
     continue;
   }
-  const outPath = `tmp-pdfs/${parsed.subject.replace(/[^a-z0-9]+/gi, "_").slice(0, 60)}.pdf`;
+  const outPath = `${config.outputDir}/${parsed.subject.replace(/[^a-z0-9]+/gi, "_").slice(0, 60)}.pdf`;
   fs.writeFileSync(outPath, pdf.content);
 
   const contact = await findOrCreateSupplierContact(fromEmail, fromName);

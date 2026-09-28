@@ -56,6 +56,23 @@ la API devuelve éxito pero lo descarta en silencio. `createDraftPurchaseInvoice
 lo intenta igualmente al crear; si no cuaja, usar
 `node scripts/set-document-number.js <purchaseId> "<numero>"` mas tarde.
 
+## Donde se guardan los PDFs/fotos (acceso desde cualquier sitio)
+
+Los archivos descargados se guardan en la carpeta indicada por `OUTPUT_DIR`
+(por defecto, `tmp-pdfs/` local). Para no tener que entrar por escritorio
+remoto a recogerlos:
+
+1. Instala en la maquina el cliente de escritorio de **Google Drive**
+   ("Google Drive para escritorio") o **OneDrive**, e inicia sesion.
+2. Crea dentro de la carpeta sincronizada una subcarpeta, p.ej.
+   `Mi unidad\facturas-valley`.
+3. Pon en `.env`: `OUTPUT_DIR=C:\Users\JonCid\Google Drive\Mi unidad\facturas-valley`
+   (o la ruta equivalente de OneDrive).
+
+A partir de ahi, cada PDF/foto que descarguen los scripts se sube solo a la
+nube, y lo abres desde cualquier sitio en drive.google.com / onedrive.com con
+tu usuario y contrasena. No hay que abrir puertos ni montar ningun FTP.
+
 ## Variables de entorno
 
 Ver `.env.example`. Nunca commitear `.env` real.

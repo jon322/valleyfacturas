@@ -9,6 +9,10 @@ function required(name) {
 }
 
 export const config = {
+  // Carpeta donde se guardan los PDFs/fotos descargados. Apuntala a una carpeta
+  // sincronizada (Google Drive / OneDrive) para que los archivos se suban solos
+  // y sean accesibles desde cualquier sitio. Por defecto, carpeta local tmp-pdfs.
+  outputDir: process.env.OUTPUT_DIR || "tmp-pdfs",
   imap: {
     host: required("BANAHOST_IMAP_HOST"),
     port: Number(process.env.BANAHOST_IMAP_PORT || 993),

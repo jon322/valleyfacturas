@@ -4,8 +4,9 @@
 // Uso: node scripts/discord-prepare.js
 import fs from "fs";
 import { fetchUnprocessedInvoiceImageMessages, downloadAttachment } from "../src/discordClient.js";
+import { config } from "../src/config.js";
 
-fs.mkdirSync("tmp-pdfs", { recursive: true });
+fs.mkdirSync(config.outputDir, { recursive: true });
 
 const messages = await fetchUnprocessedInvoiceImageMessages();
 console.log(`${messages.length} mensaje(s) sin procesar.`);
@@ -14,7 +15,7 @@ for (const m of messages) {
   const paths = [];
   for (const img of m.images) {
     const buffer = await downloadAttachment(img.url);
-    const outPath = `tmp-pdfs/discord_${m.id}_${img.filename}`;
+    const outPath = `${config.outputDir}/discord_${m.id}_${img.filename}`;
     fs.writeFileSync(outPath, buffer);
     paths.push(outPath);
   }
